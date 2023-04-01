@@ -126,7 +126,7 @@ jobs:
         # We fetch an actual bit of history here to facilitate incremental
         # builds (which may check out some earlier upstream change).
         with:
-          fetch-depth: 50
+          fetch-depth: 5
       - if: ${{ github.repository == 'kernel-patches/vmtest' }}
         name: Download bpf-next tree
         uses: libbpf/ci/get-linux-source@main
@@ -143,23 +143,9 @@ jobs:
         id: get-commit-metadata
         shell: bash
         run: |
-          if [ ${{ github.event_name }} = 'push' ]; then
-            branch="${{ github.ref_name }}"
-            echo "branch=${branch}" >> "${GITHUB_OUTPUT}"
-          else
-            branch="${{ github.base_ref }}"
-            echo "branch=${branch}" >> "${GITHUB_OUTPUT}"
-          fi
-
-          upstream=$(echo "${branch}" | sed 's@_base$@@')
-          commit="$(
-            git rev-parse "origin/${upstream}" &> /dev/null \
-              || (
-                git fetch --quiet --prune --no-tags --depth=1 --no-recurse-submodules origin +refs/heads/${upstream}:refs/remotes/origin/${upstream} \
-                  && git rev-parse "origin/${upstream}"
-              )
-          )"
-
+          branch="${{ github.ref_name }}"
+          echo "branch=${branch}" >> "${GITHUB_OUTPUT}"
+          commit="${{ github.sha }}"
           echo "timestamp=$(TZ=utc git show --format='%cd' --no-patch --date=iso-strict-local ${commit})" >> "${GITHUB_OUTPUT}"
           echo "commit=${commit}" >> "${GITHUB_OUTPUT}"
           echo "Most recent upstream commit is ${commit}"
